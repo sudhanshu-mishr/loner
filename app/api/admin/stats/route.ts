@@ -1,0 +1,2 @@
+import { ok } from '@/lib/api'; import { prisma } from '@/lib/prisma'; import { requireAdmin } from '@/server/auth/session';
+export async function GET() { await requireAdmin(); const [users, reports, flags, appeals] = await Promise.all([prisma.user.count(), prisma.report.count({ where: { status: 'OPEN' } }), prisma.moderationFlag.count({ where: { decision: 'NONE' } }), prisma.appeal.count({ where: { status: 'OPEN' } })]); return ok({ users, openReports: reports, openFlags: flags, openAppeals: appeals, socketHealth: 'external /health endpoint' }); }

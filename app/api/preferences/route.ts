@@ -1,0 +1,3 @@
+import { z } from 'zod'; import { ok, readJson } from '@/lib/api'; import { prisma } from '@/lib/prisma'; import { requireUser } from '@/server/auth/session';
+const schema = z.object({ mode: z.enum(['VIDEO','AUDIO','TEXT','SAFE_TEXT_FIRST']), languages: z.array(z.string()), regions: z.array(z.string()), interests: z.array(z.string()), verifiedOnly: z.boolean().default(false), safeModeTextFirst: z.boolean().default(true) });
+export async function PUT(request: Request) { const user = await requireUser(); const data = await readJson(request, schema); return ok(await prisma.matchPreference.upsert({ where: { userId: user.id }, update: data, create: { userId: user.id, ...data } })); }

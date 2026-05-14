@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 180 18% 96%; --foreground: 210 25% 9%; --card: 0 0% 100%; --card-foreground: 210 25% 9%;
+    --primary: 174 72% 42%; --primary-foreground: 180 30% 6%; --secondary: 210 17% 92%; --secondary-foreground: 210 25% 12%;
+    --muted: 210 15% 90%; --muted-foreground: 215 12% 39%; --accent: 189 92% 43%; --accent-foreground: 180 30% 6%;
+    --destructive: 0 72% 58%; --destructive-foreground: 0 0% 100%; --border: 210 15% 84%; --input: 210 15% 84%; --ring: 174 72% 42%; --radius: 1.25rem;
+  }
+  .dark {
+    --background: 210 28% 5%; --foreground: 180 20% 96%; --card: 210 24% 8%; --card-foreground: 180 20% 96%;
+    --primary: 174 72% 48%; --primary-foreground: 180 30% 6%; --secondary: 210 22% 13%; --secondary-foreground: 180 20% 94%;
+    --muted: 210 18% 14%; --muted-foreground: 215 12% 68%; --accent: 189 92% 50%; --accent-foreground: 180 30% 6%;
+    --destructive: 0 84% 64%; --destructive-foreground: 0 0% 100%; --border: 210 16% 18%; --input: 210 16% 18%; --ring: 174 72% 48%;
+  }
+  * { @apply border-border; }
+  html { scroll-behavior: smooth; }
+  body { @apply bg-background text-foreground antialiased; }
+  :focus-visible { @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background; }
+}
+
+.glass { @apply border border-white/10 bg-white/[0.05] shadow-2xl backdrop-blur-xl; }
+.safe-gradient { @apply bg-radial-soft; }

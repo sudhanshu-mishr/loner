@@ -1,0 +1,5 @@
+import Link from 'next/link';
+import { ShieldCheck } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
+export function Navbar() { return <header className="sticky top-0 z-40 border-b border-white/10 bg-background/80 backdrop-blur-xl"><nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4"><Link href="/" className="flex items-center gap-2 text-lg font-bold"><span className="grid size-9 place-items-center rounded-2xl bg-primary text-primary-foreground"><ShieldCheck className="size-5" /></span>Loners</Link><div className="hidden items-center gap-6 text-sm text-muted-foreground md:flex"><Link href="/safety">Safety</Link><Link href="/pricing">Pricing</Link><Link href="/legal/guidelines">Guidelines</Link></div><div className="flex items-center gap-2"><ThemeToggle /><Button asChild variant="ghost"><Link href="/auth/signin">Sign in</Link></Button><Button asChild><Link href="/app/dashboard">Start chat</Link></Button></div></nav></header>; }
