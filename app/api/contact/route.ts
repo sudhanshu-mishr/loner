@@ -1,0 +1,3 @@
+import { z } from 'zod'; import { ok, readJson } from '@/lib/api'; import { ipKey, rateLimit } from '@/lib/rate-limit'; import { fail } from '@/lib/api';
+const schema = z.object({ email: z.string().email(), subject: z.string().min(3), message: z.string().min(10).max(4000) });
+export async function POST(request: Request) { const limit = rateLimit(ipKey(request, 'contact'), 3, 60_000); if (!limit.allowed) return fail('RATE_LIMITED','Too many contact submissions',429); const data = await readJson(request, schema); return ok({ received: true, routeTo: process.env.SUPPORT_EMAIL ?? 'support@loners.example', data }); }

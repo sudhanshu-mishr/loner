@@ -1,0 +1,3 @@
+import { z } from 'zod'; import { ok, readJson } from '@/lib/api'; import { prisma } from '@/lib/prisma'; import { requireUser } from '@/server/auth/session';
+const schema = z.object({ username: z.string().min(3), ageConfirmed: z.boolean(), interests: z.array(z.string()), languages: z.array(z.string()) });
+export async function POST(request: Request) { const user = await requireUser(); const data = await readJson(request, schema); return ok(await prisma.profile.upsert({ where: { userId: user.id }, update: { ...data, completedAt: new Date() }, create: { userId: user.id, ...data, completedAt: new Date() } })); }

@@ -1,0 +1,2 @@
+import { Button } from '@/components/ui/button'; import { Input } from '@/components/ui/input';
+export default function Contact() { return <main className="mx-auto max-w-2xl px-4 py-12"><h1 className="text-4xl font-bold">Contact support</h1><form className="mt-8 space-y-4"><Input placeholder="Email" /><Input placeholder="Subject" /><textarea className="min-h-40 w-full rounded-3xl border border-border bg-background p-4" placeholder="How can we help?" /><Button>Send</Button></form></main>; }
