@@ -11,11 +11,7 @@
     "typecheck": "tsc --noEmit",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:seed": "tsx prisma/seed.ts",
-    "render:build": "prisma generate && next build",
-    "render:start": "next start -p ${PORT:-3000}",
-    "render:socket": "NODE_ENV=production tsx server/realtime/socket-server.ts",
-    "prisma:deploy": "prisma db push"
+    "prisma:seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "latest",
@@ -44,8 +40,7 @@
     "stripe": "latest",
     "tailwind-merge": "latest",
     "zod": "latest",
-    "zustand": "latest",
-    "tsx": "latest"
+    "zustand": "latest"
   },
   "devDependencies": {
     "@types/bcryptjs": "latest",
@@ -59,6 +54,7 @@
     "postcss": "latest",
     "prisma": "latest",
     "tailwindcss": "latest",
+    "tsx": "latest",
     "typescript": "latest"
   }
 }

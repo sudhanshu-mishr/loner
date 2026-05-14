@@ -9,7 +9,7 @@ Loners is a production-oriented MVP scaffold for a safer random video, audio, an
 - **Realtime:** `server/realtime/socket-server.ts` runs a Socket.IO service for queue events, signaling, chat messages, typing, warnings, and disconnects.
 - **Database:** PostgreSQL with Prisma models for users, profiles, preferences, sessions, reports, moderation flags, bans, appeals, subscriptions, device fingerprints, blocks, verification, audit logs, and admin users.
 - **Moderation:** Client reporting, text risk scanning, media moderation hook plan, report risk scoring, sanctions ladder, appeal routes, admin review queues, and trust-pool matching.
-- **Deployment:** Render Blueprint deployment for the Next.js web service, Socket.IO realtime service, Render Postgres, and Render Key Value cache, with Stripe/moderation secrets provided from the Render dashboard.
+- **Deployment:** Vercel for Next.js, Railway/Render/Fly for Socket.IO, Neon/Supabase for Postgres, Redis-ready queue/rate-limit upgrade path, Stripe checkout architecture.
 
 ## Socket event map
 
@@ -68,19 +68,7 @@ prisma/              Database schema and seed script
 docs/                Deployment and operational notes
 ```
 
-## Render deployment
-
-The whole platform is ready to deploy on Render with the root `render.yaml` Blueprint:
-
-- `loners-web`: Next.js app and API routes. Build command: `npm install && npm run render:build`; pre-deploy command: `npm run prisma:deploy`; start command: `npm run render:start`.
-- `loners-realtime`: Socket.IO signaling and matchmaking service. Build command: `npm install && npm run prisma:generate`; start command: `npm run render:socket`; health check: `/health`.
-- `loners-db`: Render Postgres used by Prisma through `DATABASE_URL`.
-- `loners-cache`: Render Key Value cache wired through `REDIS_URL` for future Redis-backed queues, presence, and rate limits.
-- `loners-shared-secrets`: generated `JWT_SECRET` and `ADMIN_ACTION_SECRET` shared by web and realtime services.
-
-After creating the Blueprint in Render, update `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_SOCKET_URL`, and `ALLOWED_ORIGINS` if you rename the services or add a custom domain. Provide Stripe, CAPTCHA, and moderation provider secrets when Render prompts for `sync: false` values.
-
-## Final local run guide
+## Final run guide
 
 ```bash
 cp .env.example .env
@@ -92,4 +80,4 @@ npm run dev:socket
 npm run dev
 ```
 
-Open `http://localhost:3000`, start the Socket.IO server on port `4000`, and use a PostgreSQL database URL in `.env`. For Render, use the Blueprint instead of the local commands above.
+Open `http://localhost:3000`, start the Socket.IO server on port `4000`, and use a PostgreSQL database URL in `.env`.

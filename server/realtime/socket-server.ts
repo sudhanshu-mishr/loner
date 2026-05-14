@@ -4,22 +4,8 @@ import { joinQueue, leaveQueue, endActiveSession, getQueueSnapshot } from '@/fea
 import { moderateText } from '@/features/moderation/moderation-service';
 import type { QueueJoinPayload } from '@/types/realtime';
 
-const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000')
-  .split(',')
-  .map((origin) => origin.trim())
-  .filter(Boolean);
-
-const httpServer = createServer((request, response) => {
-  if (request.url === '/health') {
-    response.writeHead(200, { 'content-type': 'application/json' });
-    response.end(JSON.stringify({ ok: true, service: 'loners-realtime' }));
-    return;
-  }
-
-  response.writeHead(404, { 'content-type': 'application/json' });
-  response.end(JSON.stringify({ ok: false, error: 'not_found' }));
-});
-const io = new Server(httpServer, { cors: { origin: allowedOrigins, credentials: true } });
+const httpServer = createServer();
+const io = new Server(httpServer, { cors: { origin: process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000', credentials: true } });
 const userSockets = new Map<string, string>();
 const sessionUsers = new Map<string, [string, string]>();
 
