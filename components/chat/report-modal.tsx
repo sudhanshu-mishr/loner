@@ -1,0 +1,7 @@
+'use client';
+import { useState } from 'react';
+import { Flag } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+const reasons = ['NUDITY','SEXUAL_CONTENT','HARASSMENT','HATE_SPEECH','THREAT','SPAM','SCAM','UNDERAGE','IMPERSONATION','OTHER'];
+export function ReportModal({ sessionId, reportedId }: { sessionId?: string; reportedId?: string }) { const [reason, setReason] = useState('HARASSMENT'); const submit = async () => fetch('/api/reports', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sessionId, reportedId, reason, description: 'Submitted from in-session report flow.' }) }); return <Dialog><DialogTrigger asChild><Button variant="outline"><Flag className="size-4" />Report</Button></DialogTrigger><DialogContent><DialogTitle>Report this interaction</DialogTitle><DialogDescription>Reports are reviewed with account, device, and session risk signals. Blocking is immediate.</DialogDescription><div className="grid grid-cols-2 gap-2 py-4">{reasons.map((r) => <button key={r} onClick={() => setReason(r)} className={`rounded-2xl border p-3 text-left text-xs ${reason===r?'border-primary bg-primary/10':'border-border'}`}>{r.replaceAll('_',' ')}</button>)}</div><Button onClick={submit}>Submit report</Button></DialogContent></Dialog>; }

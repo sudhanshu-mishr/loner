@@ -1,0 +1,270 @@
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "postgresql" url = env("DATABASE_URL") }
+
+enum UserRole { USER MODERATOR ADMIN SUPPORT }
+enum UserStatus { ACTIVE WARNED COOLDOWN SUSPENDED BANNED DELETED }
+enum ChatMode { VIDEO AUDIO TEXT SAFE_TEXT_FIRST }
+enum SessionStatus { QUEUED ACTIVE RECONNECTING ENDED FLAGGED }
+enum ParticipantRole { INITIATOR PARTNER }
+enum ReportReason { NUDITY SEXUAL_CONTENT HARASSMENT HATE_SPEECH THREAT SPAM SCAM UNDERAGE IMPERSONATION ILLEGAL_PERSONAL_INFO OTHER }
+enum ReportStatus { OPEN TRIAGED ESCALATED RESOLVED DISMISSED }
+enum FlagType { NUDITY SEXUAL VIOLENCE SPAM HARASSMENT SELF_HARM UNDERAGE BOT SUSPICIOUS_BEHAVIOR }
+enum ModerationDecision { NONE WARN COOLDOWN SUSPEND BAN DISMISS ESCALATE }
+enum BanType { COOLDOWN TEMPORARY PERMANENT SHADOW }
+enum AppealStatus { OPEN UNDER_REVIEW APPROVED DENIED }
+enum SubscriptionStatus { NONE TRIALING ACTIVE PAST_DUE CANCELED }
+enum VerificationType { EMAIL PHONE IDENTITY SELFIE AGE }
+enum VerificationStatus { PENDING VERIFIED REJECTED EXPIRED }
+enum PaymentStatus { PENDING SUCCEEDED FAILED REFUNDED }
+
+model User {
+  id String @id @default(cuid())
+  email String? @unique
+  phone String? @unique
+  passwordHash String?
+  role UserRole @default(USER)
+  status UserStatus @default(ACTIVE)
+  trustScore Int @default(50)
+  abuseScore Int @default(0)
+  lastSeenAt DateTime?
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  profile Profile?
+  preference MatchPreference?
+  guestSessions GuestSession[]
+  sessions SessionParticipant[]
+  reportsMade Report[] @relation("Reporter")
+  reportsReceived Report[] @relation("Reported")
+  moderationFlags ModerationFlag[]
+  bans Ban[]
+  appeals Appeal[]
+  subscription Subscription?
+  devices DeviceFingerprint[]
+  blockedUsers BlockRelation[] @relation("Blocker")
+  blockedBy BlockRelation[] @relation("Blocked")
+  verifications Verification[]
+  auditLogs AuditLog[] @relation("ActorAudit")
+  adminUser AdminUser?
+  @@index([status, trustScore])
+}
+
+model GuestSession {
+  id String @id @default(cuid())
+  userId String?
+  user User? @relation(fields: [userId], references: [id])
+  guestTokenHash String @unique
+  ipHash String?
+  deviceHash String?
+  sessionsStarted Int @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@index([ipHash, deviceHash])
+}
+
+model Profile {
+  id String @id @default(cuid())
+  userId String @unique
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  username String @unique
+  displayName String?
+  avatarUrl String?
+  bio String? @db.VarChar(280)
+  country String?
+  region String?
+  languages String[] @default([])
+  interests String[] @default([])
+  badges String[] @default([])
+  ageConfirmed Boolean @default(false)
+  completedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MatchPreference {
+  id String @id @default(cuid())
+  userId String @unique
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mode ChatMode @default(TEXT)
+  languages String[] @default([])
+  regions String[] @default([])
+  interests String[] @default([])
+  verifiedOnly Boolean @default(false)
+  safeModeTextFirst Boolean @default(true)
+  premiumFilters Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ChatSession {
+  id String @id @default(cuid())
+  mode ChatMode
+  status SessionStatus @default(ACTIVE)
+  riskScore Int @default(0)
+  startedAt DateTime @default(now())
+  endedAt DateTime?
+  endReason String?
+  metadata Json?
+  participants SessionParticipant[]
+  reports Report[]
+  flags ModerationFlag[]
+  @@index([status, startedAt])
+}
+
+model SessionParticipant {
+  id String @id @default(cuid())
+  sessionId String
+  userId String
+  role ParticipantRole
+  joinedAt DateTime @default(now())
+  leftAt DateTime?
+  skipped Boolean @default(false)
+  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([sessionId, userId])
+  @@index([userId, joinedAt])
+}
+
+model Report {
+  id String @id @default(cuid())
+  sessionId String?
+  reporterId String
+  reportedId String
+  reason ReportReason
+  status ReportStatus @default(OPEN)
+  description String? @db.VarChar(1000)
+  evidenceUrl String?
+  clientSnapshotHash String?
+  riskScore Int @default(0)
+  createdAt DateTime @default(now())
+  resolvedAt DateTime?
+  session ChatSession? @relation(fields: [sessionId], references: [id])
+  reporter User @relation("Reporter", fields: [reporterId], references: [id])
+  reported User @relation("Reported", fields: [reportedId], references: [id])
+  @@index([status, reason, createdAt])
+}
+
+model ModerationFlag {
+  id String @id @default(cuid())
+  userId String
+  sessionId String?
+  type FlagType
+  confidence Float
+  decision ModerationDecision @default(NONE)
+  source String
+  payload Json?
+  createdAt DateTime @default(now())
+  reviewedAt DateTime?
+  reviewedById String?
+  user User @relation(fields: [userId], references: [id])
+  session ChatSession? @relation(fields: [sessionId], references: [id])
+  @@index([type, decision, confidence])
+}
+
+model Ban {
+  id String @id @default(cuid())
+  userId String
+  type BanType
+  reason String
+  startsAt DateTime @default(now())
+  endsAt DateTime?
+  active Boolean @default(true)
+  createdById String?
+  user User @relation(fields: [userId], references: [id])
+  @@index([userId, active])
+}
+
+model Appeal {
+  id String @id @default(cuid())
+  userId String
+  banId String?
+  status AppealStatus @default(OPEN)
+  message String @db.VarChar(2000)
+  response String?
+  createdAt DateTime @default(now())
+  resolvedAt DateTime?
+  user User @relation(fields: [userId], references: [id])
+  @@index([status, createdAt])
+}
+
+model Subscription {
+  id String @id @default(cuid())
+  userId String @unique
+  stripeCustomerId String? @unique
+  stripeSubscriptionId String? @unique
+  status SubscriptionStatus @default(NONE)
+  plan String @default("free")
+  currentPeriodEnd DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id])
+  payments Payment[]
+}
+
+model Payment {
+  id String @id @default(cuid())
+  subscriptionId String
+  amountCents Int
+  currency String @default("usd")
+  status PaymentStatus
+  stripePaymentIntentId String? @unique
+  createdAt DateTime @default(now())
+  subscription Subscription @relation(fields: [subscriptionId], references: [id])
+}
+
+model DeviceFingerprint {
+  id String @id @default(cuid())
+  userId String?
+  deviceHash String
+  ipHash String?
+  riskScore Int @default(0)
+  lastSeenAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  user User? @relation(fields: [userId], references: [id])
+  @@index([deviceHash, ipHash])
+}
+
+model BlockRelation {
+  id String @id @default(cuid())
+  blockerId String
+  blockedId String
+  reason String?
+  createdAt DateTime @default(now())
+  blocker User @relation("Blocker", fields: [blockerId], references: [id])
+  blocked User @relation("Blocked", fields: [blockedId], references: [id])
+  @@unique([blockerId, blockedId])
+}
+
+model Verification {
+  id String @id @default(cuid())
+  userId String
+  type VerificationType
+  status VerificationStatus @default(PENDING)
+  providerRef String?
+  verifiedAt DateTime?
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id])
+}
+
+model AuditLog {
+  id String @id @default(cuid())
+  actorId String?
+  action String
+  targetType String
+  targetId String?
+  metadata Json?
+  ipHash String?
+  createdAt DateTime @default(now())
+  actor User? @relation("ActorAudit", fields: [actorId], references: [id])
+  @@index([action, createdAt])
+}
+
+model AdminUser {
+  id String @id @default(cuid())
+  userId String @unique
+  permissions String[] @default([])
+  active Boolean @default(true)
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id])
+}
